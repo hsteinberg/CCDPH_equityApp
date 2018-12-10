@@ -3,7 +3,7 @@ ui <- fluidPage(
   #titlePanel("Communicable Disease Health Equity in Cook County"),
   
   #Bring in extra CSS to style application
-  includeCSS("fluapp.css"),
+  includeCSS("app.css"),
   
   #Add Google analytics global tracking code
   # tags$head(HTML('<script async src="https://www.googletagmanager.com/gtag/js?id=UA-107917571-1"></script>')),
