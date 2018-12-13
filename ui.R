@@ -16,7 +16,7 @@ ui <- fluidPage(
   fluidRow(class = "header",
            column(class = "headimg", 2, align = "center", img(class = "imggen", src="http://cookcountypublichealth.org/files/images/CCDPH_logo-full.jpg", alt="CCDPH Logo")), 
            column(class = "headtitle", 10, HTML('
-                                                <h1 style="font-weight: 700; font-size: 40px">Communicable Diseases Health Equity in Cook County, IL
+                                                <h1 style="font-weight: 700; font-size: 30px">Communicable Disease & Health Equity Data Visualization <span id="beta">Beta</span></h1>
                                                 '))
   ),
   
@@ -49,6 +49,7 @@ ui <- fluidPage(
   mainPanel(tabsetPanel(type = "pills",
         tabPanel("about", fluidRow(column(width = 10,
                                  br(),
+                                 #h4(strong("Cook County Department of Public Health Communicable Disease & Health Equity"), style = "padding-bottom: 10px; padding-top: 5px"),
                                  strong("What is health equity?"),
                                  p('"Health equity means that everyone has a fair and just 
                                     opportunity to be healthier. This requires removing obstacles 
@@ -63,9 +64,10 @@ ui <- fluidPage(
                                  see these disparities manifested in various health outcomes in
                                  our cities, villages, and towns. Cook County Department of Public Health has
                                  made addressing health equity one of its top priorities in its
-                                 Community Health Assessment and Improvement Plan (WePlan2020). In
-                                 this app, we allow for the visualization of selected infectious
-                                 disease rates in Suburban Cook County as well as their
+                                 Community Health Assessment and Improvement Plan,',
+                                 a(href = "http://www.cookcountypublichealth.org/about/weplan", "WePlan2020."),
+                                 'In this app, we allow for the visualization of selected infectious
+                                 disease rates in Suburban Cook County and their
                                  correlations with various social indicators related to income,
                                  education, insurance status, place of birth, race, and ethnicity.'),
                                  br(),
@@ -77,15 +79,20 @@ ui <- fluidPage(
                                  and 'boxplot' tabs to visualize the correlation between your
                                  disease and social indicator of interest. Much of the data is
                                  organized by Suburban Cook County Districts, which can be seen
-                                 mapped out in the 'district map' tab. To see maps of disease
+                                 mapped out in the 'district map' tab. To map disease
                                  incidence rates and social indicators, navigate to the 'disease
                                  map' and 'social indicator map' tabs, respectively. To learn more
-                                 about the makeup and disease burdens of a specific municipality,
+                                 about the demographics and disease burdens of a specific municipality,
                                  select it in the sidebar control panel, and click on the
                                  'municipality profile' tab. All graphs and maps in this app are
                                  interactive. Hover over a data point to see more information, and
                                  zoom in and out to areas of particular interest."),
                                  br(),
+                                 p("This application is currently in beta testing. Please click ", 
+                                 a(href = "mailto:hannah.steinberg@cookcountyhhs.org?Subject=Shiny%20Equity%20App", "here"), 
+                                 " to send comments, feedback, or technical questions. Source code for this application can be found ",
+                                 a(href = "https://github.com/hsteinberg/CCDPH_equityApp", "here"), 
+                                 align = "justify", style = "padding-bottom: 10px;padding-top: 10px;text-align: center; background:  #f3f1f3;border: 3px solid #dbd6db;font-size: 12px; padding-left: 10px; padding-right: 10px;"),
                                  br()
                                  )
                  #add an image to the about panel
@@ -112,7 +119,7 @@ ui <- fluidPage(
                   anywhere within the plot."),
                p("To see the correlations of different diseases and social indicators, change the selections
                 in the dropdown menus on the sidebar."),
-               em("It is important to note that only correlations are shown here and do not necessarily 
+               em("It is important to note that only correlations are shown here and plots do not necessarily 
                 represent causal relationships."),
              br(),
              br()
@@ -126,7 +133,24 @@ ui <- fluidPage(
              br(),
              br(),
              plotlyOutput("BoxPlotSocial", height = "600px", width = "100%"),
-             br()),
+             br(),
+             br(),
+             fluidRow(column(width = 11, 
+                             strong("Figure Notes:"),
+                             p("These boxplots show the spread of the selected disease rate and social indicator in Suburban Cook County municipalities.
+                               The color of the points correspond to the Sububan Cook County District of the municipality
+                               (pink is North, green is West, blue is Southwest, and orange is South)."),
+                             p("Hover over a point to see which municipality it represents. If you are interested in 
+                               finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
+                               menu on the sidebar, and navigate to the 'municipality profile' tab."),
+                             p("To zoom into a particular part of the plot, hover over a corner of the desired area and hold
+                               and drag your cursor to highlight the desired area. To return to see the whole plot, double-click
+                               anywhere within the plot."),
+                             p("To see plots of different diseases and social indicators, change the selections
+                               in the dropdown menus on the sidebar."),
+                             em("It is important to note that only correlations are shown here and plots do not necessarily 
+                                represent causal relationships."))),
+                             br()),
 
     tabPanel("distirct map",
              br(),
@@ -149,7 +173,7 @@ ui <- fluidPage(
              leafletOutput("DiseaseMap", height = "700px", width = "100%"),
              fluidRow(column(width=12, align = "right", tags$figcaption("Source: Cook County Department of Public Health"))),
              br(),
-             p("Hover over a municipality to see its name and incidence rate. If you are interested in 
+             p("Hover over a municipality to see its name and disease incidence rate. If you are interested in 
                  finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
                menu on the sidebar, and navigate to the 'municipality profile' tab."),
              br()),
@@ -159,7 +183,9 @@ ui <- fluidPage(
              leafletOutput("SocialMap", height = "700px", width = "100%"),
              fluidRow(column(width=12, align = "right",textOutput("socialSource"))),
              br(),
-             textOutput("socialIndicatorMapText"),
+             p("Hover over a municipality to see its name and social indicator value. If you are interested in 
+                 finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
+               menu on the sidebar, and navigate to the 'municipality profile' tab."),
              br()),
     
     tabPanel("municipality profile", conditionalPanel("input.town != 0",
@@ -187,7 +213,7 @@ ui <- fluidPage(
                  Cook County section of that municipality."),
                p("Median household income, and racial and ethnic makup data are estimates from the 2012-2016
                  American Community Survey 5-Year data."),
-               p("Disease incidence data is calculated from reported cases to the Cook County Department of Public Health.")
+               p("Disease incidence data is calculated from cases reported to the Cook County Department of Public Health.")
              ),
              conditionalPanel("input.town == 0",
                               br(),
