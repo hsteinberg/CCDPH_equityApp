@@ -1,6 +1,6 @@
 ui <- fluidPage(
   #theme = shinytheme("cerulean"),
-  #titlePanel("Communicable Disease Health Equity in Cook County"),
+  #titlePanel("",windowTitle = "Communicable Disease Health Equity in Cook County"),
   
   #Bring in extra CSS to style application
   includeCSS("app.css"),
@@ -16,7 +16,7 @@ ui <- fluidPage(
   fluidRow(class = "header",
            column(class = "headimg", 2, align = "center", img(class = "imggen", src="http://cookcountypublichealth.org/files/images/CCDPH_logo-full.jpg", alt="CCDPH Logo")), 
            column(class = "headtitle", 10, HTML('
-                                                <h1 style="font-weight: 700; font-size: 30px">Communicable Disease & Health Equity Data Visualization <span id="beta">Beta</span></h1>
+                                                <h1 style="font-weight: 700; font-size: 35px">Communicable Disease & Health Equity Data Visualization <span id="beta">Beta</span></h1>
                                                 '))
   ),
   
@@ -28,6 +28,12 @@ ui <- fluidPage(
                   selectInput(inputId = "disease", "Disease", 
                               choices = disease_choices,
                               selected = 1),
+               
+               #about disease
+               #h4(a(href = textOutput("diseaseLink"), textOutput("diseaseLinkText"), target="_blank")),
+               uiOutput("diseaseLink"),
+               #print(textOutput("diseaseLink")),
+               br(),
            
                   #select dropdown for social
                   selectInput(inputId = "social", "Social Indicator", 
@@ -46,8 +52,8 @@ ui <- fluidPage(
            
 
   
-  mainPanel(tabsetPanel(type = "pills",
-        tabPanel("about", fluidRow(column(width = 10,
+  mainPanel(tabsetPanel(type = "tabs",
+        tabPanel("About", fluidRow(column(width = 10,
                                  br(),
                                  #h4(strong("Cook County Department of Public Health Communicable Disease & Health Equity"), style = "padding-bottom: 10px; padding-top: 5px"),
                                  strong("What is health equity?"),
@@ -65,7 +71,7 @@ ui <- fluidPage(
                                  our cities, villages, and towns. Cook County Department of Public Health has
                                  made addressing health equity one of its top priorities in its
                                  Community Health Assessment and Improvement Plan,',
-                                 a(href = "http://www.cookcountypublichealth.org/about/weplan", "WePlan2020."),
+                                 a(href = "http://www.cookcountypublichealth.org/about/weplan", "WePlan2020.", target="_blank"),
                                  'In this app, we allow for the visualization of selected infectious
                                  disease rates in Suburban Cook County and their
                                  correlations with various social indicators related to income,
@@ -75,23 +81,32 @@ ui <- fluidPage(
                                  p("Select a disease and a social indicator of interest from the
                                  sidebar control panel. If you are interested in highlighting
                                  results from a specific municipality, select one from the 'Find
-                                 Your Municipality' dropdown menu. Navigate to the 'scatter plot'
-                                 and 'boxplot' tabs to visualize the correlation between your
+                                 Your Municipality' dropdown menu. Navigate to the",
+                                 em('Scatter Plot'),
+                                 "and",
+                                 em('Box Plot'),
+                                 "tabs to visualize the correlation between your
                                  disease and social indicator of interest. Much of the data is
                                  organized by Suburban Cook County Districts, which can be seen
-                                 mapped out in the 'district map' tab. To map disease
-                                 incidence rates and social indicators, navigate to the 'disease
-                                 map' and 'social indicator map' tabs, respectively. To learn more
+                                 mapped out in the",
+                                 em('District Map'),
+                                 "tab. To map disease
+                                 incidence rates and social indicators, navigate to the",
+                                 em('Disease Map'),
+                                 "and",
+                                 em('Social Indicator Map'), 
+                                 "tabs, respectively. To learn more
                                  about the demographics and disease burdens of a specific municipality,
-                                 select it in the sidebar control panel, and click on the
-                                 'municipality profile' tab. All graphs and maps in this app are
+                                 select it in the sidebar control panel, and click on the",
+                                 em('Municipality Profile'),
+                                 "tab. All graphs and maps in this app are
                                  interactive. Hover over a data point to see more information, and
                                  zoom in and out to areas of particular interest."),
                                  br(),
                                  p("This application is currently in beta testing. Please click ", 
                                  a(href = "mailto:hannah.steinberg@cookcountyhhs.org?Subject=Shiny%20Equity%20App", "here"), 
                                  " to send comments, feedback, or technical questions. Source code for this application can be found ",
-                                 a(href = "https://github.com/hsteinberg/CCDPH_equityApp", "here"), 
+                                 a(href = "https://github.com/hsteinberg/CCDPH_equityApp", "here", target="_blank"), 
                                  align = "justify", style = "padding-bottom: 10px;padding-top: 10px;text-align: center; background:  #f3f1f3;border: 3px solid #dbd6db;font-size: 12px; padding-left: 10px; padding-right: 10px;"),
                                  br()
                                  )
@@ -100,7 +115,7 @@ ui <- fluidPage(
                  #column(width = 2, br(), br(),
                  #                img(src = "jonah-pettrich-440528-unsplash.jpg", width = "100%"))
                  )),
-    tabPanel("scatter plot", 
+    tabPanel("Scatter Plot", 
              plotlyOutput("ScatterPlot", height = "720px", width = "100%"),
              br(),
              br(),
@@ -112,7 +127,8 @@ ui <- fluidPage(
                 (pink is North, green is West, blue is Southwest, and orange is South)."),
                p("Hover over a point to see which municipality it represents. If you are interested in 
                  finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
-                 menu on the sidebar, and navigate to the 'municipality profile' tab."),
+                 menu on the sidebar, and navigate to the",
+                 em('Municipality Profile'), "tab."),
                p("To see trends in only select district(s), deselect the others in the figure legend."),
                p("To zoom into a particular part of the plot, hover over a corner of the desired area and hold
                   and drag your cursor to highlight the desired area. To return to see the whole plot, double-click
@@ -121,11 +137,28 @@ ui <- fluidPage(
                 in the dropdown menus on the sidebar."),
                em("It is important to note that only correlations are shown here and plots do not necessarily 
                 represent causal relationships."),
+               br(),
+               br(),
+               strong("How to Interpret Scatter Plots:"),
+               br(),
+               p("These scatter plots help show if there is a correlation between the selected social indicator 
+                 and disease rate in Suburban Cook County. If it looks like the points form an uphill line from 
+                 left to right, then there is a positive correlation between the two variables (for example: as 
+                 unemployment rate increases, so do chlamydia rates). If the points form more of a downhill slope 
+                 from left to right, you can say the variables have are negatively correlated (for example: as median 
+                 household income increases, chlamydia rates decrease). Alternatively, if it's hard to infer any 
+                 pattern from the points, there is likely no correlation between the two variables (for example: 
+                 Legionnaires Disease does not appear to be correlated to unemployment rate in Suburban Cook County). 
+                 It is also possible that some correlations are only present in certain geographic districts (for 
+                 example: pertussis is positively correlated to median household income in the North District, but 
+                 this pattern is not clear in the other districts). Please note that only correlations are 
+                 shown here and they do not necessarily represent causal relationships 
+                 (for example: we cannot say from this data alone that high unemployment rates cause increased chlamydia rates)."),
              br(),
              br()
              ))),
 
-    tabPanel("boxplots",
+    tabPanel("Box Plots",
              br(),
              plotlyOutput("BoxPlotDisease", height = "600px", width = "100%"),
              br(),
@@ -137,12 +170,13 @@ ui <- fluidPage(
              br(),
              fluidRow(column(width = 11, 
                              strong("Figure Notes:"),
-                             p("These boxplots show the spread of the selected disease rate and social indicator in Suburban Cook County municipalities.
-                               The color of the points correspond to the Sububan Cook County District of the municipality
+                             p("These box plots show the distribution  of the selected disease rate and social indicator within and between Suburban Cook County districts.
+                               Each point represents a municipality, and the color of the points and boxes correspond to the municipality's District 
                                (pink is North, green is West, blue is Southwest, and orange is South)."),
                              p("Hover over a point to see which municipality it represents. If you are interested in 
                                finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
-                               menu on the sidebar, and navigate to the 'municipality profile' tab."),
+                               menu on the sidebar, and navigate to the",
+                               em('Municipality Profile'), "tab."),
                              p("To zoom into a particular part of the plot, hover over a corner of the desired area and hold
                                and drag your cursor to highlight the desired area. To return to see the whole plot, double-click
                                anywhere within the plot."),
@@ -150,10 +184,29 @@ ui <- fluidPage(
                                in the dropdown menus on the sidebar."),
                              em("It is important to note that only correlations are shown here and plots do not necessarily 
                                 represent causal relationships."))),
+                             br(),
+                             br(),
+                             strong("How to Interpret Box Plots:"),
+                             br(),
+                             p("These boxplots show the distribution of disease rates and social indicators within and between 
+                               Suburban Cook County districts. Each dot represents a municipality, and its vertical position 
+                               corresponds to the variable being plotted. The municipalities are grouped horizontally by district. 
+                               For each district, there is a box that represents the middle half of values for that district. 
+                               The line inside the box represents the median value for that district. If the four district median 
+                               lines generally line up, it can be interpreted that there is not a significant difference between 
+                               districts for that particular variable (for example:", em("Haemophilus influenza"), "Invasive Disease Incidence does 
+                               not differ much by district). However, if the median lines and boxes are at very different positions 
+                               vertically, it can be inferred that there is a difference between districts (for example: there 
+                               is a higher percentage of Asian individuals in the North District than in the other three districts). 
+                               Municipalities that are above or below the lines (aka 'whiskers') projecting from the boxes are 
+                               considered outliers; that is, they have a higher or lower value than expected for the district in 
+                               which they reside (for example: Western Springs has a relatively high median household income for 
+                               the West District). You can hover over any point to see which municipality it represents, and 
+                               its value for the factor being plotted."),
                              br()),
 
-    tabPanel("distirct map",
-             br(),
+    tabPanel("District Map",
+             h3("Suburban Cook County Districts"),
              leafletOutput("districtMap", height = "700px", width = "100%"),
              br(),
              p("Suburban Cook County can be divided into four geographic districts.
@@ -164,32 +217,34 @@ ui <- fluidPage(
                navigate to the 'disease map' or 'social indicator map' to explore these variables."),
              p("Hover over a municipality to see its name. If you are interested in 
                 finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
-                menu on the sidebar, and navigate to the 'municipality profile' tab."),
+                menu on the sidebar, and navigate to the",
+               em('Municipality Profile'), "tab."),
              br(),
              br()),
 
-    tabPanel("disease map", 
-             br(),
+    tabPanel("Disease Map", 
+             uiOutput("diseaseLink2"),
              leafletOutput("DiseaseMap", height = "700px", width = "100%"),
              fluidRow(column(width=12, align = "right", tags$figcaption("Source: Cook County Department of Public Health"))),
              br(),
              p("Hover over a municipality to see its name and disease incidence rate. If you are interested in 
                  finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
-               menu on the sidebar, and navigate to the 'municipality profile' tab."),
+               menu on the sidebar, and navigate to the",
+               em('Municipality Profile'), "tab."),
              br()),
 
-    tabPanel("social indicator map", 
-             br(),
+    tabPanel("Social Indicator Map", 
+             h3(textOutput("social")),
              leafletOutput("SocialMap", height = "700px", width = "100%"),
              fluidRow(column(width=12, align = "right",textOutput("socialSource"))),
              br(),
              p("Hover over a municipality to see its name and social indicator value. If you are interested in 
                  finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
-               menu on the sidebar, and navigate to the 'municipality profile' tab."),
+               menu on the sidebar, and navigate to the",
+               em('Municipality Profile'), "tab."),
              br()),
     
-    tabPanel("municipality profile", conditionalPanel("input.town != 0",
-               br(),
+    tabPanel("Municipality Profile", conditionalPanel("input.town != 0",
                h3(textOutput("town")),
                fluidRow(
                  column(width = 4, align = "center", wellPanel(h4(textOutput("townPop")))),
@@ -227,7 +282,9 @@ ui <- fluidPage(
 
 
 
-)#end tabset panel
+),#end tabset panel
+titlePanel("",windowTitle = "Cook County CD Equity Data")
+
 )#end main panel
   
 )#end fluid page

@@ -405,6 +405,56 @@ disease_list = names(disease_choices)
 social_choices = 1:ncol(social_data)
 names(social_choices) = social_list
 
+
+#disease links
+disease_link = c(
+  "Campylobacteriosis" =
+    "https://www.cdc.gov/campylobacter/index.html",
+  "Chlamydia" =
+    "https://www.cdc.gov/std/chlamydia/",
+  "Cryptosporidiosis" =
+    "https://www.cdc.gov/parasites/crypto/index.html",
+  "Gonorrhea" =
+    "https://www.cdc.gov/std/gonorrhea/default.htm",
+  "Haemophilus Influenzae Invasive Disease" =
+    "https://www.cdc.gov/hi-disease/index.html",
+  "Hepatitis B Chronic" =
+    "https://www.cdc.gov/hepatitis/hbv/index.htm",
+  "Hepatitis C Chronic" =
+    "https://www.cdc.gov/hepatitis/hcv/index.htm",
+  "Histoplasmosis" =
+    "https://www.cdc.gov/fungal/diseases/histoplasmosis/index.html",
+  "Legionnaires Disease" =
+    "https://www.cdc.gov/legionella/index.html",
+  "Listeria" =
+    "https://www.cdc.gov/listeria/index.html",
+  "Lyme Disease" =
+    "https://www.cdc.gov/lyme/index.html",
+  "Malaria" =
+    "https://www.cdc.gov/parasites/malaria/index.html",
+  "Mumps" =
+    "https://www.cdc.gov/mumps/index.html",
+  "Pertussis"  =
+    "https://www.cdc.gov/pertussis/index.html",
+  "Salmonella" =
+    "https://www.cdc.gov/salmonella/index.html",
+  "Shiga toxin-producing E. coli" = 
+    "https://www.cdc.gov/features/ecoliinfection/index.html",
+  "Shigella" =
+    "https://www.cdc.gov/shigella/index.html",
+  "Streptococcal Disease Invasive Group A" =
+    "https://www.cdc.gov/groupastrep/diseases-public/index.html",
+  "Tuberculosis" =
+    "https://www.cdc.gov/tb/topic/basics/default.htm",
+  "Varicella (Chickenpox)" =
+    "https://www.cdc.gov/chickenpox/about/index.html",
+  "West Nile Virus" =
+    "https://www.cdc.gov/westnile/index.html"
+  
+  
+)
+
+
 rm(keep_disease, select_disease_case_counts, all_disease_case_counts_long,
   outside_jurisdiction, remove, CC_districts, CC_towns_clean,
    add_social_data, clean_towns_AFF, clean_towns_INEDDS, transform_disease_crosstab)

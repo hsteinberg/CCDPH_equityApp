@@ -1,7 +1,11 @@
 server <- function(input, output, session) {
   #make data frame for just selected disease
+  disease_index <- reactive({
+    as.numeric(input$disease)
+  })
+  
   disease <- reactive({
-    select_disease_crosstabs[as.numeric(input$disease)] %>%
+    select_disease_crosstabs[disease_index()] %>%
       as.data.frame()
   })
   
@@ -273,6 +277,20 @@ server <- function(input, output, session) {
     
   })
   
+  output$socialSource <- renderText({
+    paste("Source:", social_sources[as.numeric(input$social)])
+  })
+  
+  output$social <- renderText({
+    paste(social_name(), "in Suburban Cook County")
+  })
+  
+  # output$socialIndicatorMapText <- renderText({
+  #   paste("Hover over a municipality to see its name and its ", tolower(social_name()) , " value. If you are interested in 
+  #                finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
+  #              menu on the sidebar, and navigate to the 'municipality profile' tab.", sep = "")
+  # })
+  
 ################################ Racial makeup pie chart ############################################# 
   output$townRacePie <- renderPlotly({
     #get percent for each race for selected town
@@ -396,14 +414,14 @@ server <- function(input, output, session) {
       layout(xaxis = list(title = "", tickangle = -45),
              yaxis = list(range = c(0,100),title = "Percentile"),
              margin = list(b = 100, l = 200, r = 100, t = 100),
-             title = paste(town_name(),"Communicable Disease Incidence Percentiles\nCompared to Other Suburban Cook County Municipalities"),
+             title = paste("How Communicable Disease Rates in", town_name(),"\nCompare to Other Suburban Cook County Municipalities"),
              showlegend = F)
   })
   
   #Make legend for percentiles graph since plotly won't cooperate
   output$legend <- renderPlot({
     plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
-    legend("center", legend =c('Top Quartile', 'Intermediate', 'Bottom Quartile', 'No Reported Cases'),
+    legend("center", legend =c('Top 25%', 'Intermediate', 'Bottom 25%', 'No Reported Cases'),
            col = c("#bc4040", "#f9b754","#5fccc4", "grey50"), pch = c(15,15,15,0), bty = "n", cex = 1.2,
            pt.cex = 2, horiz = T, border = "grey")
   })
@@ -442,17 +460,21 @@ server <- function(input, output, session) {
              
   })
   
-  output$socialSource <- renderText({
-    paste("Source:", social_sources[as.numeric(input$social)])
+
+  
+
+  
+################################  Links to CDC page for each disease #############################################
+# Reactivity hangs when you use the same uiOutput twice in server, so had to duplicate
+  
+  output$diseaseLink <- renderUI({
+    h5(a(href = as.character(disease_link[disease_name()]), paste("About", disease_name()), target = "_blank")) 
   })
   
-  output$socialIndicatorMapText <- renderText({
-    paste("Hover over a municipality to see its name and its ", tolower(social_name()) , " value. If you are interested in 
-                 finding out more about that municipality, select it in the 'Find Your Municipality' dropdown
-               menu on the sidebar, and navigate to the 'municipality profile' tab.", sep = "")
+  output$diseaseLink2 <- renderUI({
+    h3(a(href = as.character(disease_link[disease_name()]), disease_name(), target = "_blank"),
+       "in Suburban Cook County") 
   })
-  
-  
 
 }
 
