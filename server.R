@@ -23,6 +23,16 @@ server <- function(input, output, session) {
     social_data[,as.numeric(input$social)]
   })
 
+  #Selected social data formatted
+  selected_social_print <- reactive({
+    if(as.numeric(input$social) == 1){
+      paste0("$",selected_social() %>% round(0) %>% prettyNum(big.mark = ","))
+    }
+    else{
+      paste0(selected_social() %>% round(1), "%")
+    }
+    
+  })
 
   #Calculate average incidence per 100,000 population
   disease_av_per_thousand <- reactive({
@@ -67,7 +77,10 @@ server <- function(input, output, session) {
     gsub("^.*\\.", "",colnames(disease())[year2()])
   })
 
-  district_colors = reactive({c("#b55681","#95c47b","#29a7c6", "#f7986f")})
+  district_colors = reactive({c("#b55681", "#f7986f","#95c47b","#29a7c6")})
+  #district_colors = reactive({randomColor(4)})
+  #district_colors = reactive({c("#7FDBD3","#529ABF","#32217A", "#321535")[1:4]})
+  #district_colors = reactive({c("black", "grey50", "grey70", "grey90")[4:1]})
 
 ############################# Scatter plot of disease by social index ########################################## 
   output$ScatterPlot <- renderPlotly({
@@ -94,9 +107,12 @@ server <- function(input, output, session) {
       
     #Produce scatter plot
     plot_ly(x=selected_social(), y=disease_av_per_thousand(),
-              type = "scatter", mode = "markers", text = rownames(disease()),
+              type = "scatter", mode = "markers", 
+              #text = rownames(disease()),
+              text = paste0("<b>",rownames(disease()),"</b>","<br>2010 Population: ",prettyNum(town_size_district$Population, big.mark = ","),  "<br>", social_name(), ": ", selected_social_print(),
+                            "<br>", disease_name(), " Incidence: ", round(disease_av_per_thousand(),1), " per 100,000"),
               color = town_size_district$District, size = town_size_district$Population,
-              colors = district_colors(),
+              colors = district_colors(), 
               sizes = c(5,150), hoverinfo = "text") %>%
         layout(
           yaxis = list(title=paste("Mean Annual ", disease_name(), " Incidence per 100,000 (",
@@ -106,7 +122,7 @@ server <- function(input, output, session) {
           margin = list(b = 60, l = 50, r = 50, t = 120),
           annotations = a
         ) 
-
+    
     
   })
   
@@ -132,8 +148,8 @@ server <- function(input, output, session) {
       plot_ly(y = disease_av_per_thousand(), type = "box", boxpoints = "all", 
               jitter = 0.3, pointpos = 0, color = town_size_district$District,
               colors = district_colors(),
-              text = paste(names(CC_towns_vector[2:length(CC_towns_vector)]),"<br>", disease_name(), " Incidence: ",
-                           round(disease_av_per_thousand()), " per 100,000", sep = ""), hoverinfo = "text")%>%
+              text = paste("<b>",names(CC_towns_vector[2:length(CC_towns_vector)]),"</b><br>", disease_name(), " Incidence: ",
+                           round(disease_av_per_thousand(),1), " per 100,000", sep = ""), hoverinfo = "text")%>%
         layout(
           yaxis = list(title=paste("Mean Annual ", disease_name(), " Incidence per 100,000 (",
                                    year1_name(), "-", year2_name(), ")", sep = "")),
@@ -168,8 +184,8 @@ server <- function(input, output, session) {
       plot_ly(y = selected_social(), type = "box", boxpoints = "all", 
               jitter = 0.3, pointpos = 0, color = town_size_district$District,
               colors = district_colors(),
-              text = paste(names(CC_towns_vector[2:length(CC_towns_vector)]),"<br>", social_name(), ": ",
-                           selected_social(), sep = ""), 
+              text = paste("<b>",names(CC_towns_vector[2:length(CC_towns_vector)]),"</b><br>", social_name(), ": ",
+                           selected_social_print(), sep = ""), 
               hoverinfo = "text")%>%
         layout(
           yaxis = list(title=social_name()),
@@ -186,48 +202,103 @@ server <- function(input, output, session) {
 ############################# Map showing the SCC districts ########################################## 
   output$districtMap <- renderLeaflet({
     
-    colors = district_colors()
+    colors = c(district_colors(),  "#4B5F96", "#CECECE", "#999999")
     
-    m <- leaflet(cc, options = leafletOptions(minZoom = 9.4)) %>% addProviderTiles(providers$CartoDB.Positron) %>%  setView(lng = -87.86, lat = 41.81, zoom = 10) %>%
-      addPolygons(
-        fillColor = as.character(colors[cc$DIST]),
+    m <- leaflet(options = leafletOptions(minZoom = 8)) %>% addProviderTiles(providers$CartoDB.Positron) %>%  setView(lng = -87.86, lat = 41.81, zoom = 10) %>%
+      addPolygons(data = muni,
+                  fillColor = colors[6],
+                  stroke = F,
+                  dashArray = "3",
+                  fillOpacity = 0.5,
+                  label = "Unincorporated Area",
+                  labelOptions = labelOptions(
+                    style = list("font-weight" = "normal", padding = "3px 8px"),
+                    textsize = "15px", direction = "auto")
+      ) %>%
+      addPolygons(data = chicago,
+                  fillColor = colors[7],
+                  stroke = F,
+                  dashArray = "3",
+                  fillOpacity = 0.5,
+                  label = "Chicago",
+                  #label = sprintf("<strong>%s</strong><br/>%s", "Chicago", "Out of Jurisdiction") %>% lapply(htmltools::HTML),
+                  labelOptions = labelOptions(
+                    style = list("font-weight" = "normal", padding = "3px 8px"),
+                    textsize = "15px", direction = "auto")
+      ) %>%
+      addPolygons(data = cc2,
+        fillColor = as.character(colors[cc2$DIST]),
         weight = 2,
         opacity = 1,
         color = "white",
         dashArray = "3",
         fillOpacity = 0.7,
-        highlight = highlightOptions(weight = 4, color = "white", dashArray = "1", fillOpacity = 0.7, bringToFront = TRUE),
-        label = cc$CITY,
+        highlight = highlightOptions(weight = 4, color = "white", dashArray = "1", fillOpacity = 0.7, bringToFront = FALSE),
+        label = sprintf("<strong>%s</strong><br/>%s", cc2$CITY, c("North District", "West District", "Southwest District", "South District", "Out of Jurisdiction")[as.numeric(cc2$DIST)]) %>% lapply(htmltools::HTML),
         labelOptions = labelOptions(
           style = list("font-weight" = "normal", padding = "3px 8px"),
           textsize = "15px", direction = "auto")
       )%>%
-      addLegend("topright", colors = colors, labels = c("North", "West", "Southwest", "South"),
-                title = "Suburban Cook County District",
-                opacity = 1)
+      addLegend("topright", colors = c(colors), 
+                labels = c("North District","West District", "Southwest District", "South District", "Out of Jurisdiction", "Unincorporated", "Chicago"),
+                title = "Suburban Cook County Districts",
+                opacity = 0.7)%>%
+      addScaleBar(position = "bottomleft")
     
-    if(town_index() > 0){
-      m <- m %>% 
-        addPolylines(stroke=TRUE, weight = 4,color="black", opacity = 1, data=cc[town_index(),],group="highlighted_polygon")
-    }
+    # if(town_index() > 0){
+    #   m <- m %>%
+    #     addPolylines(stroke=TRUE, weight = 4,color="black", opacity = 1, data=cc[town_index(),],group="highlighted_polygon")
+    # }
     m
     
       
+  })
+  
+  #Add black outline around selected town when selected for all 3 maps
+  observeEvent({
+    input$disease
+    input$social
+    input$town
+    input$tabs == "Maps"
+    input$tabs == "District Map"},{
+    if(town_index() > 0){
+      sapply(c("districtMap", "DiseaseMap", "SocialMap"), function(map){
+        leafletProxy(map) %>%
+          clearGroup("highlighted_polygon") %>%
+          addPolylines(stroke=TRUE, weight = 4,color="black", opacity = 1, data=cc[town_index(),],group="highlighted_polygon")
+
+      })
+    }
+  })
+  observeEvent({
+    input$town},{
+    if(town_index() == 0){
+      sapply(c("districtMap", "DiseaseMap", "SocialMap"), function(map){
+        leafletProxy(map) %>%
+          clearGroup("highlighted_polygon")
+      })
+    }
   })
   
 ########### Map showing the selected disease incidence rates in all municipalities ################################## 
   output$DiseaseMap = renderLeaflet({
     pal <- colorNumeric("inferno", 0:max(disease_av_per_thousand()+1), reverse = T)
 
-    m<- leaflet(cc, options = leafletOptions(minZoom = 9.4)) %>% addProviderTiles(providers$CartoDB.Positron) %>%  setView(lng = -87.86, lat = 41.81, zoom = 10) %>%
-      addPolygons(
+    m<- leaflet(options = leafletOptions(minZoom = 8)) %>% addProviderTiles(providers$CartoDB.Positron) %>%  setView(lng = -87.86, lat = 41.81, zoom = 10) %>%
+      addPolygons(data = muni,
+                  fillColor = "#CECECE",
+                  stroke = F,
+                  dashArray = "3",
+                  fillOpacity = 0.5
+      ) %>%
+      addPolygons(data = cc,
         fillColor = pal(disease_av_per_thousand()),
         weight = 2,
         opacity = 1,
         color = "white",
         dashArray = "3",
         fillOpacity = 0.7,
-        highlight = highlightOptions(weight = 4, color = "white", dashArray = "1", fillOpacity = 0.7, bringToFront = TRUE),
+        highlight = highlightOptions(weight = 4, color = "white", dashArray = "1", fillOpacity = 0.7, bringToFront = FALSE),
         #label = paste(cc$CITY, "<br/> Chlamydia Cases:", cl_2017),
         label = sprintf("<strong>%s</strong><br/>%.1f", cc$CITY, disease_av_per_thousand()) %>% lapply(htmltools::HTML),
         labelOptions = labelOptions(
@@ -235,15 +306,16 @@ server <- function(input, output, session) {
           textsize = "15px", direction = "auto")
       ) %>%
       addLegend("topright", pal = pal, values = disease_av_per_thousand(),
-                title = paste("Mean Annual ", disease_name(), "<br>Incidence per 100,000<br>(",
-                              year1_name(), "-", year2_name(), ")", sep = ""),
+                title = paste0(strwrap(paste0("Mean Annual ", disease_name(), " Incidence per 100,000 (",
+                              year1_name(), "-", year2_name(), ")"), 20),collapse = "<br>"),
                 #labFormat = labelFormat(prefix = "$"),
-                opacity = 1)
-    
-    if(town_index() > 0){
-      m <- m %>% 
-        addPolylines(stroke=TRUE, weight = 4,color="black", opacity = 1, data=cc[town_index(),],group="highlighted_polygon")
-    }
+                opacity = 1)%>%
+      addScaleBar(position = "bottomleft")
+
+    # if(town_index() > 0){
+    #   m <- m %>%
+    #     addPolylines(stroke=TRUE, weight = 4,color="black", opacity = 1, data=cc[town_index(),],group="highlighted_polygon")
+    # }
     m
   })
   
@@ -251,28 +323,36 @@ server <- function(input, output, session) {
   output$SocialMap <- renderLeaflet({
     pal <- colorNumeric("inferno", 0:max(selected_social()+1), reverse = T)
     
-    m <- leaflet(cc, options = leafletOptions(minZoom = 9.4)) %>% addProviderTiles(providers$CartoDB.Positron) %>%  setView(lng = -87.86, lat = 41.81, zoom = 10) %>%
-      addPolygons(
+    m <- leaflet(options = leafletOptions(minZoom = 8)) %>% addProviderTiles(providers$CartoDB.Positron) %>%  setView(lng = -87.86, lat = 41.81, zoom = 10) %>%
+      addPolygons(data = muni,
+                  fillColor = "#CECECE",
+                  stroke = F,
+                  dashArray = "3",
+                  fillOpacity = 0.5
+      ) %>%
+      addPolygons(data = cc,
         fillColor = pal(selected_social()),
         weight = 2,
         opacity = 1,
         color = "white",
         dashArray = "3",
         fillOpacity = 0.7,
-        highlight = highlightOptions(weight = 4, color = "white", dashArray = "1", fillOpacity = 0.7, bringToFront = TRUE),
-        label = sprintf("<strong>%s</strong><br/>%g", cc$CITY, selected_social()) %>% lapply(htmltools::HTML),
+        highlight = highlightOptions(weight = 4, color = "white", dashArray = "1", fillOpacity = 0.7, bringToFront = FALSE),
+        #label = sprintf("<strong>%s</strong><br/>%g", cc$CITY, selected_social()) %>% lapply(htmltools::HTML),
+        label = paste("<strong>", cc$CITY, "</strong><br/>", selected_social_print())%>% lapply(htmltools::HTML),
         labelOptions = labelOptions(
           style = list("font-weight" = "normal", padding = "3px 8px"),
           textsize = "15px", direction = "auto")
       ) %>%
       addLegend("topright", pal = pal, values = selected_social(),
-                title = social_name(),
-                opacity = 1)
+                title = paste0(strwrap(social_name(),20),collapse = "<br>"),
+                opacity = 1)%>%
+      addScaleBar(position = "bottomleft")
     
-    if(town_index() > 0){
-      m <- m %>% 
-        addPolylines(stroke=TRUE, weight = 4,color="black", opacity = 1, data=cc[town_index(),],group="highlighted_polygon")
-    }
+    # if(town_index() > 0){
+    #   m <- m %>%
+    #     addPolylines(stroke=TRUE, weight = 4,color="black", opacity = 1, data=cc[town_index(),],group="highlighted_polygon")
+    # }
     m
     
   })
@@ -378,7 +458,7 @@ server <- function(input, output, session) {
   
   #town name
   output$town <- renderText({
-    town_name()
+    paste0(town_name(), ", IL")
   })
   
 
@@ -423,7 +503,7 @@ server <- function(input, output, session) {
     plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
     legend("center", legend =c('Top 25%', 'Intermediate', 'Bottom 25%', 'No Reported Cases'),
            col = c("#bc4040", "#f9b754","#5fccc4", "grey50"), pch = c(15,15,15,0), bty = "n", cex = 1.2,
-           pt.cex = 2, horiz = T, border = "grey")
+           pt.cex = 3, horiz = T, border = "grey")
   })
   
 ################################ Town disease rates graph #############################################

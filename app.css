@@ -5,6 +5,8 @@ Primary Header
 =================================
 */
 
+
+
 .header {
   height: 120px;
   background: #fff;
@@ -53,8 +55,8 @@ Home Tab
    padding-bottom: 10px;
    padding-top: 10px;
    text-align: center;
-   background: #ecf2f8;
-   border: 3px solid #6E9DC9;
+   background: #F9FBFC;
+   border: 3px solid #D6D8D8;
    border-radius: 10px;
    font-size: 15px;
 }
@@ -63,8 +65,8 @@ Home Tab
    padding-bottom: 10px;
    padding-top: 10px;
    text-align: center;
-   background:  #f3f1f3;
-   border: 3px solid #dbd6db;
+   background:  #F9FBFC;
+   border: 3px solid #D6D8D8;
    font-size: 12px;
 }
 
@@ -109,4 +111,8 @@ General Styles
   transform: translateY(-50%);
   display:block;
   margin:auto;
+}
+
+* {
+  font-family: Arial;
 }

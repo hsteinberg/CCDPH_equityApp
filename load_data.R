@@ -2,7 +2,8 @@ require(magrittr)
 require(tidyverse)
 require(plyr)
 library(rgdal)
-setwd("S:/_GenCD/HealthEquityShiny")
+library(rgeos)
+setwd("S:/Enhanced Surveillance/Shiny/HealthEquityShiny/equityApp")
 
 ############################## MUNICIPALITY DATA ############################################################
 
@@ -393,8 +394,30 @@ cc$CITY = clean_towns_INEDDS(cc$CITY)
 cc <- cc[order(cc$CITY),]
 cc$CITY[3] <- "Barrington (pt.)"
 
+#include OOJ for district map
+cc2 <- readOGR(dsn = "./data/shape_files", layer = "towns_subcook") %>% spTransform(CRS("+init=epsg:4326"))
 
 
+cc2$DIST = factor(cc2$DIST, c("N", "W", "SW", "S", "O"))
+CC_towns_clean = gsub(" \\(.*$", "", CC_towns)
+cc2$CITY = gsub("McCook", "Mccook", cc2$CITY)
+
+cc2$CITY = clean_towns_INEDDS(cc2$CITY)
+cc2 <- cc2[order(cc2$CITY),]
+cc2$CITY[3] <- "Barrington (pt.)"
+
+# muni <- readOGR(dsn = "./data/shape_files", layer = "CCmunicipality2014") %>% spTransform(CRS("+init=epsg:4326"))
+# muni <- muni[-(which(muni$municipali == "Chicago")),]
+# chicago <- readOGR(dsn = "./data/shape_files", layer = "CCmunicipality2014") %>% spTransform(CRS("+init=epsg:4326")) 
+# chicago <- chicago[which(chicago$municipali == "Chicago"),]
+
+
+all_cook <- readOGR(dsn = "./data/shape_files", layer = "CCmunicipality2014") %>% spTransform(CRS("+init=epsg:4326")) 
+chicago <- all_cook[which(all_cook$municipali == "Chicago"),]
+muni <- all_cook[-(which(all_cook$municipali == "Chicago")),]
+#simplify and merge all SCC, so takes less time to plot
+muni <- gSimplify(muni, tol = 0.00001)
+muni <- gUnionCascaded(muni)
 
 ############################## UI FORMATTING ############################################################
 
@@ -458,7 +481,10 @@ disease_link = c(
 rm(keep_disease, select_disease_case_counts, all_disease_case_counts_long,
   outside_jurisdiction, remove, CC_districts, CC_towns_clean,
    add_social_data, clean_towns_AFF, clean_towns_INEDDS, transform_disease_crosstab)
-save.image("equityApp/equityApp.RData")
-
+#save.image("equityApp/equityApp.RData")
+save(cc, cc2, select_disease_case_counts_long, select_disease_crosstabs, social_data, town_size_district,
+     CC_towns, CC_towns_clean, CC_towns_vector, disease_choices, disease_link, disease_list,
+     social_choices, social_list, social_sources, edit_disease_names, clean_towns_INEDDS, muni, chicago, all_cook,
+     file = "equityApp/equityApp.RData")
 
 
