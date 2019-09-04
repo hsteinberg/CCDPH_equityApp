@@ -14,10 +14,8 @@ ui <- fluidPage(
   
   #Building the header 
   fluidRow(class = "header",
-           column(class = "headimg", 2, align = "center", img(class = "imggen", src="http://cookcountypublichealth.org/files/images/CCDPH_logo-full.jpg", alt="CCDPH Logo")), 
-           column(class = "headtitle", 10, HTML('
-                                                <h1 style="font-weight: 700; font-size: 35px">Communicable Disease & Health Equity Data Visualization <span id="beta">Beta</span></h1>
-                                                '))
+           column(class = "headimg", 2, align = "center", img(class = "imggen", src="https://www.cookcountypublichealth.org/wp-content/uploads/2018/12/CookCountyLogo.png", alt="CCDPH Logo")), 
+           column(class = "headtitle", 10, p("Communicable Disease & Health Equity Data Visualization"))
   ),
   
   
@@ -108,7 +106,10 @@ ui <- fluidPage(
                                  p("This application is currently in beta testing. Please click ", 
                                  a(href = "mailto:hannah.steinberg@cookcountyhhs.org?Subject=Shiny%20Equity%20App", "here"), 
                                  " to send comments, feedback, or technical questions. Source code for this application can be found ",
-                                 a(href = "https://github.com/hsteinberg/CCDPH_equityApp", "here", target="_blank"), 
+                                 a(href = "https://github.com/hsteinberg/CCDPH_equityApp", "here.", target="_blank"), 
+                                 "If you like this app, click", a(href = "https://ccdphcd.shinyapps.io/home/", "here", target="_blank"),
+                                 "to see more interactive data applications from the Cook County Department of Public Health
+                                        Communicable Disease Unit!",
                                  align = "justify", style = "padding-bottom: 10px;padding-top: 10px;text-align: center; background:  #EAF5FF;border: 3px solid #D5E2EF;font-size: 12px; padding-left: 10px; padding-right: 10px;"),
                                  br()
                                  )
@@ -137,9 +138,11 @@ ui <- fluidPage(
                  br()),
         
     tabPanel("Scatter Plot", 
-             plotlyOutput("ScatterPlot", height = "720px", width = "90%"),
-             br(),
-             br(),
+             fluidRow(column(width = 11, class = "scatter",
+                plotlyOutput("ScatterPlot", height = "100%", width = "100%")
+                )
+                ),
+             
              fluidRow(column(width = 10, 
                              strong("Figure Notes:"),
                p("The size of points in the scatter plot are proportional to the municipality population size 
@@ -203,11 +206,11 @@ ui <- fluidPage(
     #            em('Municipality Profile'), "tab."),
     #          br()),
     
-    tabPanel("Box Plots", br(),fluidRow(column(width = 6,
+    tabPanel("Box Plots", br(),fluidRow(column(width = 6,class = "box",
              style = "border-right: 1px solid #D6D8D8", br(),
-             plotlyOutput("BoxPlotDisease", height = "600px", width = "100%"),br()),
-             column(width = 6, br(),
-             plotlyOutput("BoxPlotSocial", height = "600px", width = "100%"),br())),
+             plotlyOutput("BoxPlotDisease", height = "100%", width = "100%"),br()),
+             column(width = 6, br(),class = "box",
+             plotlyOutput("BoxPlotSocial", height = "100%", width = "100%"),br())),
              br(),
              br(),
              fluidRow(column(width = 12, 
@@ -261,23 +264,27 @@ ui <- fluidPage(
                  column(width = 4, align = "center", wellPanel(h4(textOutput("townIncome")))),
                  column(width = 4, align = "center", wellPanel(h4(textOutput("townDistrict"))))),
                fluidRow(
-                column(width = 6, wellPanel(plotlyOutput("townRacePie"))),
-                column(width = 6, wellPanel(plotlyOutput("townEthnicityPie")))),
+                column(width = 12, wellPanel(plotlyOutput("townRacePie")))),
+                #column(width = 6, wellPanel(plotlyOutput("townEthnicityPie")))),
                wellPanel(fluidRow(
-                 column(width = 12, plotlyOutput("townDiseasePercentile", height = "600px"))
+                 column(width = 12, class = "muni",plotlyOutput("townDiseasePercentile", height = "100%", width = "100%"))
                ),
                fluidRow(
                  column(width = 12, plotOutput("legend", height = "200px"))
                )),
-               fluidRow(
-                 column(width = 12, wellPanel(plotlyOutput("townDiseaseRates", height = "700px")))),
+               wellPanel(fluidRow(
+                 column(width = 12, class = "muni",plotlyOutput("townDiseaseRates", height = "100%", width = "100%")))),
                br(),
-               strong("Sources:"),
+               strong("Notes:"),
                p("Population data are estimates from the 2010 United States Census. Populations for municipalities
                  only partially within Cook County represent only individuals who live in the 
                  Cook County section of that municipality."),
-               p("Median household income, and racial and ethnic makup data are estimates from the 2012-2016
-                 American Community Survey 5-Year data."),
+               p(paste0("Median household income, and racial and ethnic makup data are estimates from the ", year-5, "-", year-1,
+                 " American Community Survey 5-Year data for the entire municipality. Racial and ethnic categories 
+                 for the purpose of these analyses are mutually exclusive. Hispanic/Latinx refers to anyone of 
+                 Hispanic/Latinx ethnicity and could be of any race or combination of races. The other racial 
+                 categories refer to those who identify as only that race (or as two or more races) and not as 
+                 Hispanic/Latinx. Race/ethnicity totals may add up to slightly more than 100 due to rounding.")),
                p("Disease incidence data is calculated from cases reported to the Cook County Department of Public Health.")
              ))),
              conditionalPanel("input.town == 0",
@@ -291,6 +298,7 @@ ui <- fluidPage(
     tabPanel("District Map",
              fluidRow(column(width = 10, h3("Suburban Cook County Districts"),
              leafletOutput("districtMap", height = "700px", width = "800px"),
+             #downloadButton('downloadDistricts'),
              br(),
              p("Suburban Cook County can be divided into four geographic districts.
                The municiaplities within each district have some similarities in terms of

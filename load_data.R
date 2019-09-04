@@ -3,9 +3,12 @@ require(tidyverse)
 require(plyr)
 library(rgdal)
 library(rgeos)
-setwd("S:/Enhanced Surveillance/Shiny/HealthEquityShiny/equityApp")
+library(tidycensus)
+setwd("S:/Enhanced Surveillance/Shiny/HealthEquityShiny")
 
 ############################## MUNICIPALITY DATA ############################################################
+
+year = 2018
 
 #All towns/cities/places in Cook County
 CC_towns = read.table("data/municipalities.txt", sep = "\n", strip.white = T, stringsAsFactors = F)[,1]
@@ -26,9 +29,9 @@ names(CC_towns_vector)[4] <- "Barrington (pt.)"
 #Read in table of all cases by disease, town, and year
 all_disease_case_counts_long = read.table("data/all_cases_by_city_and_year.txt", sep = "\t", 
                                           strip.white = T, header = T) %>% set_colnames(c("Disease", "Count", "City", "Year")) %>%
-                                          filter(Year > 2012)
+                                          filter(Year > (year-5))
 
-
+#Chicago;Burbank;Evanston;Forest View;Oak Park;Skokie;Stickney;University Park
 #diseases to include
 disease_list = c("Haemophilus Influenzae Invasive Disease",
         "Hepatitis B Chronic",
@@ -180,7 +183,7 @@ clean_towns_INEDDS <- function(towns){
 select_disease_crosstabs = lapply(select_disease_case_counts, function(x){
   xtab = x %>%
     select(City,Year,Cases) %>%
-    filter(Year != 2018) %>% #2018 data not complete yet, so leave out
+    filter(Year <= year) %>% 
     spread(Year, Cases) %>% #get count per year per city
     mutate(City = trimws(City)) %>% #trim whitespace from city names
     transform_disease_crosstab() #clean
@@ -211,78 +214,6 @@ select_disease_crosstabs$Tuberculosis$`2015`[66] <- 0
 
 
 ############################## SOCIAL INDEX DATA ############################################################
-
-#initialize table
-
-
-add_social_data <- function(data_file, towns_col = "GEO.display.label", var_col, table = NULL, 
-                            towns = CC_towns, col_label = var_col, var_type = "numeric"){
-  # Adds social variables to compiled table or start a table
-  #
-  # Args:
-  #   data_file: .csv file where new data is stored
-  #   towns_col: column (name or index number) where town names are located in data_file
-  #   var_col: column(s) where variables to be added are located in data_file  
-  #   table: table to be appended, if NULL- new table will be created. Rownames should be town names.
-  #   towns: towns/municipalities to be included in table (if table is not provided)
-  #   var_type: "numeric", "factor", or "character"
-  #
-  # Returns:
-  #  table with new variable(s) appended as new columns
-  
-  #read in data
-  data = read.csv(data_file, stringsAsFactors = F, strip.white = T)
-  data = data[-1,]
-  
-  #format town names
-  data[,towns_col] = clean_towns_AFF(data[,towns_col]) 
-  
-  if(!(is.null(table))){
-    towns = rownames(table)
-  }
-
-  data = data[(which(data[,towns_col] %in% towns)),] #subset data to towns in list
-
-  rownames(data) = data[,towns_col] #make rownames town names
-  data = data[,var_col, drop = FALSE] #subset to columns of interest
-  colnames(data) = col_label #change column names to variable names
-  
-  #make sure variable is in correct format
-  if(var_type == "numeric"){
-    for(i in 1:ncol(data)){
-      data[,i] = as.numeric(data[,i])
-    }
-  }
-  else if (var_type == "factor"){
-    for(i in 1:ncol(data)){
-      data[,i] = as.factor(data[,i])
-    }
-  }
-  else{
-    for(i in 1:ncol(data)){
-      data[,i] = as.character(data[,i])
-    }
-  }
-
-  #if table is provided, merge new data
-  if(!(is.null(table))){
-    output = merge(table, data, by = "row.names", all.x = TRUE, all.y = FALSE)
-    rownames(output) = output[,1]
-    output = output[,-1, drop = FALSE]
-  }
-  
-  #if table is not provided, make a new one
-  else{
-    temp = as.data.frame(matrix(nrow = length(towns), ncol = 1))
-    rownames(temp) = towns
-    output = merge(temp, data, by = "row.names", all.x = TRUE, all.y = FALSE)
-    rownames(output) = output[,1]
-    output = output[,-c(1,2), drop = FALSE]
-    
-  }
-
-  return(output)
-}
 
 
 clean_towns_AFF <- function(towns){
@@ -323,60 +254,61 @@ clean_towns_AFF <- function(towns){
   return(towns)
 }
 
-#Make social data table
-social_data = add_social_data("data/ACS_16_5YR_DP03_economics_IL_places_data.csv", 
-                              var_col = c("HC01_VC85", "HC03_VC161", "HC03_VC12"),
-                              col_label = c("HouseholdIncome_Median", "Poverty", "Unemployment_Rate"))
 
-social_data = add_social_data("data/ACS_16_5YR_S2701_health_insurance_IL_places_data.csv", var_col = "HC05_EST_VC01",
-                              col_label = "Uninsured_Perc", table = social_data)
-social_data = add_social_data("data/ACS_16_5YR_S1501_education_IL_places_data.csv", var_col = "HC02_EST_VC17",
-                              col_label = "HighSchoolPlus_Perc", table = social_data)
-social_data$NoHS25 = 100 - social_data$HighSchoolPlus_Perc
-social_data = social_data %>% select(-HighSchoolPlus_Perc)
-social_data = add_social_data("data/DEC_00_SF4_QTP14_foreign_born_IL_places_data.csv", var_col = "HC02_VC04",
-                              col_label = "ForeignBorn_Perc", table = social_data)
-social_data = add_social_data("data/ACS_16_5YR_DP05_population_IL_places_data.csv", 
-                              var_col = c("HC03_VC49", "HC03_VC50", "HC03_VC56","HC03_VC51",  "HC03_VC45", "HC03_VC64", "HC03_VC88"),
-                              col_label = c("White_perc", "Black_perc", "Asian_perc","Native_perc",  "multirace_perc", "hawaiian", "Hispanic_perc"),
-                              table = social_data)
-social_data$Native_perc = social_data$Native_perc + social_data$hawaiian
-social_data = social_data %>% select(-hawaiian)
+#make social data table with tidycensus
+social_data = get_acs(geography = "place", state = "IL",  
+                         variables = c("DP03_0062","DP03_0119P","DP03_0009PE", "DP03_0099PE", "DP02_0066PE",
+                                       "DP02_0092PE", "DP05_0077PE", "DP05_0078PE",
+                                       "DP05_0080PE", "DP05_0081PE", "DP05_0079PE",
+                                       "DP05_0083PE", "DP05_0071PE"),
+                         output = "wide", geometry = F) %>%
+  select(ends_with("E")) %>%
+  dplyr::rename("HouseholdIncome_Median" = DP03_0062E, "Poverty" = DP03_0119PE,
+                "Unemployment_Rate" = DP03_0009PE, "Uninsured_Perc" = DP03_0099PE, "NoHS25" = DP02_0066PE,
+                "ForeignBorn_Perc" = DP02_0092PE, "White_perc" = DP05_0077PE,
+                "Black_perc" = DP05_0078PE, "Asian_perc" = DP05_0080PE,
+                "NHOPI" = DP05_0081PE, "AIAN" = DP05_0079PE,
+                "multirace_perc" = DP05_0083PE, "Hispanic_perc" = DP05_0071PE) %>%
+  mutate(NoHS25 = 100-NoHS25) %>%
+  mutate(Native_perc = NHOPI+AIAN) %>%
+  select(-c(NHOPI, AIAN)) %>%
+  mutate(NAME = clean_towns_AFF(NAME)) %>%
+  filter(NAME %in% CC_towns) %>%
+  select(NAME, HouseholdIncome_Median, Poverty, Unemployment_Rate, 
+         Uninsured_Perc, NoHS25, ForeignBorn_Perc, White_perc, 
+         Black_perc, Asian_perc, Native_perc, multirace_perc, Hispanic_perc) %>%
+  arrange(NAME) %>%
+  as.data.frame() %>%
+  set_rownames(.$NAME) %>%
+  select(-NAME)
+
+
 
 
 social_list = c("Median Household Income","Percent of Households Below Poverty Level", "Unemployment Rate", "Percent Uninsured",
-                "Percent 25+ Without High School Degree", "Percent Foreign Born", "Pecent White", "Percent Black",
-                "Percent Asian", "Percent Native American, Alaska Native, Hawaiian or other Pacific Islander Native",
-                "Percent Two or More Races", "Percent Hispanic or Latino")
+                "Percent 25+ Without High School Degree", "Percent Foreign Born", "Percent Non-Hispanic White", "Percent Non-Hispanic Black",
+                "Percent Non-Hispanic Asian", "Percent Native American, Alaska Native, Hawaiian or other Pacific Islander Native",
+                "Percent Two or More Races", "Percent Hispanic or Latinx")
 
-# social_descriptions = c("Median Household Income data for each municipality is taken from the 2016 American Community Survey",
-#                         "Percent Below Poverty Level data for each municipality is taken from the 2016 American Community Survey",
-#                         "Unemplyment Rate data for each municipality is taken from the 2016 American Community Survey",
-#                         "Percent Uninsured data for each municipality is taken from the 2016 American Community Survey",
-#                         "Percent 25+ Without Highschool Degree data for each municipality is taken from the 2016 American Community Survey,
-#                         and represents the percent of the population 25 years of age or older who did not complete high school",
-#                         "Percent Foreign Born data for each municipality is taken from the 2010 Census",
-#                         rep("Race and ethnicity data for each municipality is taken from the 2016 American Community Survey", 6))
 
-social_sources = c(rep("2012-2016 American Community Survey 5-Year Data", 5), 
-                        "2010 United States Census",
-                        rep("2012-2016 American Community Survey 5-Year Data", 6))
+social_sources = c(rep(paste0(year-5, "-", year-1, " American Community Survey 5-Year Data"), 12))
 
 
 #Make table of population size and district for plotting
-CC_districts = read.csv("data/districts.csv", stringsAsFactors = F, strip.white = T)
-remove = which(CC_districts$Municipality %in% outside_jurisdiction)
-CC_districts = CC_districts[-remove,]
+CC_districts = read.csv("data/districts.csv", stringsAsFactors = F, strip.white = T) %>%
+  filter(Municipality %in% CC_towns)
 
-#town_size_district = add_social_data("data/ACS_16_5YR_DP05_population_IL_places_data.csv", var_col = "HC01_VC03",
-#                                     col_label = "Population") #2016 data but partial towns are wrong
-town_size_district = add_social_data("data/pop2010_include_partial.csv", var_col = "Population2010",
-                                       towns_col = "Municipality", col_label = "Population") #2010 census data
-town_size_district = merge(town_size_district, CC_districts, by.x = "row.names", by.y = "Municipality")
-rownames(town_size_district) = town_size_district$Row.names
-town_size_district = town_size_district[,-1]
-town_size_district$District = factor(town_size_district$District, levels = c("North", "West", "Southwest", "South"))
 
+town_size_district = read.csv("data/pop2010_include_partial.csv") %>%
+  mutate(Municipality = clean_towns_AFF(Municipality)) %>%
+  filter(Municipality %in% CC_towns) %>%
+  left_join(CC_districts, by = "Municipality") %>%
+  dplyr::rename("Population" = Population2010) %>%
+  arrange(Municipality) %>%
+  set_rownames(.$Municipality) %>%
+  select(-Municipality) %>%
+  mutate(District = factor(District, levels = c("North", "West", "Southwest", "South")))
+  
 
 
 
@@ -478,12 +410,9 @@ disease_link = c(
 )
 
 
-rm(keep_disease, select_disease_case_counts, all_disease_case_counts_long,
-  outside_jurisdiction, remove, CC_districts, CC_towns_clean,
-   add_social_data, clean_towns_AFF, clean_towns_INEDDS, transform_disease_crosstab)
-#save.image("equityApp/equityApp.RData")
+
 save(cc, cc2, select_disease_case_counts_long, select_disease_crosstabs, social_data, town_size_district,
-     CC_towns, CC_towns_clean, CC_towns_vector, disease_choices, disease_link, disease_list,
+     CC_towns, CC_towns_clean, CC_towns_vector, disease_choices, disease_link, disease_list, year,
      social_choices, social_list, social_sources, edit_disease_names, clean_towns_INEDDS, muni, chicago, all_cook,
      file = "equityApp/equityApp.RData")
 

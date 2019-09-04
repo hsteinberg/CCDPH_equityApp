@@ -104,9 +104,10 @@ server <- function(input, output, session) {
     
     #suppress warnings  
     options(warn = -1)
-      
+    
+    
     #Produce scatter plot
-    plot_ly(x=selected_social(), y=disease_av_per_thousand(),
+    p<- plot_ly(x=selected_social(), y=disease_av_per_thousand(),
               type = "scatter", mode = "markers", 
               #text = rownames(disease()),
               text = paste0("<b>",rownames(disease()),"</b>","<br>2010 Population: ",prettyNum(town_size_district$Population, big.mark = ","),  "<br>", social_name(), ": ", selected_social_print(),
@@ -115,13 +116,29 @@ server <- function(input, output, session) {
               colors = district_colors(), 
               sizes = c(5,150), hoverinfo = "text") %>%
         layout(
-          yaxis = list(title=paste("Mean Annual ", disease_name(), " Incidence per 100,000 (",
-                                   year1_name(), "-", year2_name(), ")", sep = "")),
-          xaxis = list(title=social_name()),
+          yaxis = list(title=paste("Mean Annual ", disease_name(), "\nIncidence per 100,000 (",
+                                   year1_name(), "-", year2_name(), ")",
+                                   rep("&nbsp;", 20), #adding space under axis title
+                                   rep("\n&nbsp;", 3),
+                                   sep = ""),
+                       titlefont = list(size = 16),
+                       tickfont = list(size = 16)),
+          xaxis = list(title=social_name(),
+                       titlefont = list(size = 16),
+                       tickfont = list(size = 16)),
           title = paste(disease_name(),"Incidence and\n", social_name(), "\nby Suburban Cook County Municipality"),
-          margin = list(b = 60, l = 50, r = 50, t = 120),
-          annotations = a
+          margin = list(b = 120, l = 90, r = 0, t = 100),
+          annotations = a, cex = 2
         ) 
+    # p$elementId <- NULL
+    # # Example usage of plotly image
+    # plotly_IMAGE(p, 
+    #              width = 1200, 
+    #              height = 1200, 
+    #              format = "png", 
+    #              scale = 1, 
+    #              out_file = "output.png")
+    p
     
     
   })
@@ -280,6 +297,18 @@ server <- function(input, output, session) {
     }
   })
   
+  #trying to include download capability
+  # output$downloadDistricts <- downloadHandler(
+  #   filename = function() { 
+  #     "SCCdistricts.png"
+  #   },
+  #   content = function(file){
+  #     m <- leafletProxy("districtMap")
+  #     mapshot(m, file = file, remove_controls = "zoomControl")
+  #   }
+  #   
+  # )
+  # 
 ########### Map showing the selected disease incidence rates in all municipalities ################################## 
   output$DiseaseMap = renderLeaflet({
     pal <- colorNumeric("inferno", 0:max(disease_av_per_thousand()+1), reverse = T)
@@ -379,21 +408,22 @@ server <- function(input, output, session) {
     perc_asian = social_data$Asian_perc[town_index()]
     perc_multi = social_data$multirace_perc[town_index()]
     perc_native = social_data$Native_perc[town_index()]
+    perc_hispanic = social_data$Hispanic_perc[town_index()]
     
     #calculate percent that did not have one of races listed above
-    perc_other = 100 - perc_white - perc_black - perc_asian - perc_multi - perc_native
+    perc_other = 100 - perc_white - perc_black - perc_asian - perc_multi - perc_native - perc_hispanic
     
     #Format for plot_ly
-    perc = c(perc_white, perc_black, perc_asian, perc_native, perc_multi,  perc_other)
+    perc = c(perc_white, perc_black, perc_asian, perc_native, perc_multi, perc_hispanic, perc_other)
     perc = round(perc, 1)
-    names = c("White", "Black", "Asian", "Native American", "2 or more", "Other")
+    names = c("White", "Black", "Asian", "Native", "Two or More Races", "Hispanic/Latinx", "Other")
     race = cbind.data.frame(names, perc)  %>% as.data.frame() %>%
       set_colnames(c("Race", "Perc"))  %>% 
       filter(Perc > 0) #filter out races with no representation so that they don't show up outside pie chart
     
     #set colors
-    colors = c("White" = "#525174", "Asian" = "#5dd39e", "Black" = "#348aa7","2 or more" = "#bce784",
-               "Native" = "#9ba0bc","Other" = "#939196")
+    colors = c("White" = "#525174", "Asian" = "#5dd39e", "Black" = "#348aa7","Two or More Races" = "#bce784",
+               "Native" = "#035451","Hispanic/Latinx" = "#9ba0bc",  "Other" = "#939196")
     colors = (colors[as.character(race$Race)]) #needed because not every race is in every pie chart
     
     #Plot pie chart
@@ -407,7 +437,7 @@ server <- function(input, output, session) {
                              b = 100,
                              t = 150,
                              pad = 4),
-             title = "Racial Makeup")
+             title = "Racial/Ethnic Makeup")
   })
   
   

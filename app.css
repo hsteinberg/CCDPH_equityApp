@@ -7,7 +7,7 @@ Primary Header
 
 
 
-.header {
+.aheader {
   height: 120px;
   background: #fff;
   border-bottom: 6px solid #6E9DC9;
@@ -22,19 +22,34 @@ Primary Header
   background: linear-gradient(to right, #fff, #6E9DC9);*/
 }
 
+
+.header {
+  border-bottom: 6px solid #6E9DC9;
+}
+
 .headimg {
   height:120px;
 }
 
-.headtitle {
+.aheadtitle {
     position: relative;
     top: 50%;
     -webkit-transform: translateY(-50%);
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
     color: #000000;
-    font-size: 80px;
+    font-size: 35px;
     letter-spacing: .04em;
+    font-weight: 700; 
+}
+
+.headtitle {
+    color: #000000;
+    font-size: 35px;
+    letter-spacing: .04em;
+    font-weight: 700; 
+    vertical-align: middle;
+    padding-top: 35px;
 }
 
 #beta {
@@ -111,6 +126,20 @@ General Styles
   transform: translateY(-50%);
   display:block;
   margin:auto;
+}
+
+.scatter{
+  height: 100vh !important;
+}
+
+.box{
+  height: 80vh !important;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.muni{
+  height: 85vh !important;
 }
 
 * {
