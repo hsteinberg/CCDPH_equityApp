@@ -118,8 +118,8 @@ server <- function(input, output, session) {
         layout(
           yaxis = list(title=paste("Mean Annual ", disease_name(), "\nIncidence per 100,000 (",
                                    year1_name(), "-", year2_name(), ")",
-                                   rep("&nbsp;", 20), #adding space under axis title
-                                   rep("\n&nbsp;", 3),
+                                   #rep("&nbsp;", 20), #adding space under axis title
+                                   #rep("\n&nbsp;", 3),
                                    sep = ""),
                        titlefont = list(size = 16),
                        tickfont = list(size = 16)),
