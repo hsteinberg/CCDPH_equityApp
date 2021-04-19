@@ -3,7 +3,7 @@ require(plotly)
 library(rgdal)
 library(leaflet)
 require(magrittr)
-load("equityApp.RData")
+load("equityApp.RData") 
 
 
 
